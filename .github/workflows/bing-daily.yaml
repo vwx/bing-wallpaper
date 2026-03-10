@@ -1,0 +1,93 @@
+# .github/workflows/bing-daily.yaml
+
+name: Bing Wallpaper Daily
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+    - cron: '0 22 * * *'
+
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Number of days to fetch (1-8)'
+        required: false
+        default: '8'
+        type: string
+      region:
+        description: 'Market region code (e.g., en-US, zh-CN)'
+        required: false
+        default: 'en-US'
+        type: string
+
+  pull_request:
+    paths:
+      - 'bing.py'
+      - '.github/workflows/bing-daily.yaml'
+      - 'requirements.txt'
+
+env:
+  PYTHON_VERSION: '3.11'
+  IMAGE_DIR: 'image'
+  DATA_DIR: 'data'
+
+jobs:
+  bing-wallpapers:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    concurrency:
+      group: bing-wallpaper
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Configure Git user
+        run: |
+          git config --global user.name "sw"
+          git config --global user.email "vwx@github.com"
+
+      - name: Run Bing downloader script
+        run: |
+          python bing.py \
+            --output ${{ env.IMAGE_DIR }} \
+            --data ${{ env.DATA_DIR }} \
+            --workers 4 \
+            --verbose
+        env:
+          DAYS: ${{ inputs.days || '8' }}
+          REGION: ${{ inputs.region || 'en-US' }}
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git status --short
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+            echo "No new wallpapers or updates"
+          fi
+
+      - name: Commit and push updates
+        if: steps.git-check.outputs.changes_detected == 'true'
+        run: |
+          git add ${IMAGE_DIR}/ ${DATA_DIR}/
+          git commit -m "Bing wallpapers $(date +'%Y-%m-%d %H:%M')"
+          git push https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git HEAD:main
