@@ -325,7 +325,7 @@ class ImageDownloader:
     ) -> str:
         url = self._normalize_url(url).rstrip()
         thumb_url = self._build_thumbnail_url(url, self.QS_THUMB)
-        return f'- ![]({thumb_url}){date_str} [download 4k]({url})'
+        return f'- ![]({thumb_url}){date_str} [View Image]({url})'
 
     def _get_date_path(self, api_item: Dict[str, Any]) -> Optional[str]:
         if api_item.get('date'):
