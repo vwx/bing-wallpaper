@@ -44,6 +44,11 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
+          sparse-checkout: |
+            /*
+            !image-archive/
+            !image/archive/
+          sparse-checkout-cone-mode: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
