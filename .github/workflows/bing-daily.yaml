@@ -4,8 +4,7 @@ name: Bing Wallpaper Daily
 
 on:
   schedule:
-    - cron: '0 12 * * *'
-    - cron: '0 22 * * *'
+    - cron: '0 21 * * *'
 
   workflow_dispatch:
     inputs:
