@@ -14,7 +14,7 @@ on:
         type: string
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.12'
   IMAGE_DIR: 'image'
   IMAGE_ARCHIVE_DIR: 'image-archive'
 
