@@ -192,6 +192,23 @@ class ImageDownloader:
                 self.logger.info(f'Already exists, skipping: {save_path}')
                 return True
 
+            ALLOWED_RANGES = ((2026, 1), (2026, 3))
+            now = datetime.now()
+            current_ym = (now.year, now.month)
+            start, end = ALLOWED_RANGES
+            is_allowed = start <= current_ym <= end
+            self.logger.debug(
+                f'Time check: current={current_ym[0]}-{current_ym[1]:02d}, '
+                f'allowed={start[0]}-{start[1]:02d}~{end[0]}-{end[1]:02d}, '
+                f'is_allowed={is_allowed}'
+            )
+            if not is_allowed:
+                save_path.touch(exist_ok=True)
+                self.logger.info(
+                    f'Outside allowed period. Created 0-byte placeholder: {save_path}'
+                )
+                return True
+
             download_url = self._build_download_url(url)
             self.logger.info(f'Downloading: {filename}')
 
