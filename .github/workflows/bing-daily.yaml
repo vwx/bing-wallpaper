@@ -4,8 +4,8 @@ name: Bing Wallpaper Daily
 
 on:
   schedule:
-    - cron: '0 21 * * *'
-
+    - cron: '0 10 * * *'
+    - cron: '0 20 * * *'
   workflow_dispatch:
     inputs:
       days:
@@ -18,7 +18,6 @@ on:
         required: false
         default: 'en-US'
         type: string
-
   pull_request:
     paths:
       - 'bing.py'
@@ -38,7 +37,6 @@ jobs:
     concurrency:
       group: bing-wallpaper
       cancel-in-progress: false
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -64,8 +62,8 @@ jobs:
 
       - name: Configure Git user
         run: |
-          git config --global user.name "sw"
-          git config --global user.email "vwx@github.com"
+          git config --global user.name 'sw'
+          git config --global user.email 'vwx@github.com'
 
       - name: Run Bing downloader script
         run: |
@@ -82,17 +80,21 @@ jobs:
         id: git-check
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "changes_detected=true" >> $GITHUB_OUTPUT
-            echo "Changes detected:"
+            echo 'changes_detected=true' >> $GITHUB_OUTPUT
+            echo 'Changes detected:'
             git status --short
           else
-            echo "changes_detected=false" >> $GITHUB_OUTPUT
-            echo "No new wallpapers or updates"
+            echo 'changes_detected=false' >> $GITHUB_OUTPUT
+            echo 'No new wallpapers or updates'
           fi
 
       - name: Commit and push updates
         if: steps.git-check.outputs.changes_detected == 'true'
         run: |
           git add ${IMAGE_DIR}/ ${DATA_DIR}/
-          git commit -m "Bing wallpapers $(date +'%Y-%m-%d %H:%M')"
+          minute=$(date +%M)
+          rounded_minute=$((minute / 10 * 10))
+          timestamp_iso=$(date +'%Y-%m-%dT%H:')$(printf '%02d' $rounded_minute)':00'
+          timestamp_msg=$(date +'%Y-%m-%d %H:')$(printf '%02d' $rounded_minute)
+          git commit --date="${timestamp_iso}" -m "Bing wallpapers ${timestamp_msg}"
           git push https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git HEAD:main
