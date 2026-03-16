@@ -50,13 +50,20 @@ class ImageArchiver:
         self.logger.info(f'Retention policy: keep {sorted(retention)}')
 
         dirs_to_process: list[Path] = []
-        for entry in dir_source.iterdir():
-            if not entry.is_dir():
+
+        for year_entry in dir_source.iterdir():
+            if not year_entry.is_dir():
                 continue
-            rel_path = entry.relative_to(dir_source)
-            month_key = self._parse_month_dir(str(rel_path))
-            if month_key is not None:
-                dirs_to_process.append(entry)
+
+            for month_entry in year_entry.iterdir():
+                if not month_entry.is_dir():
+                    continue
+
+                rel_path = month_entry.relative_to(dir_source)
+                month_key = self._parse_month_dir(str(rel_path))
+
+                if month_key is not None:
+                    dirs_to_process.append(month_entry)
 
         dirs_to_process.sort(key=lambda p: str(p.relative_to(dir_source)))
 
@@ -67,6 +74,7 @@ class ImageArchiver:
 
             rel_path = entry.relative_to(dir_source)
             month_key = self._parse_month_dir(str(rel_path))
+
             if month_key is None:
                 continue
 
@@ -75,9 +83,10 @@ class ImageArchiver:
                 continue
 
             archive_path = dir_archive / rel_path
+
             if archive_path.exists():
-                self.logger.warning(f'Archive already exists: {archive_path}, skipping')
-                continue
+                self.logger.warning(f'Overwriting existing archive: {archive_path}')
+                shutil.rmtree(archive_path)
 
             try:
                 archive_path.parent.mkdir(parents=True, exist_ok=True)
@@ -93,6 +102,7 @@ class ImageArchiver:
             self.logger.info('Archiving complete. Moved 1 directory.')
         else:
             self.logger.info(f'Archiving complete. Moved {moved_count} directories.')
+
         return 0
 
 
