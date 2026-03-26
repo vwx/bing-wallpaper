@@ -57,7 +57,7 @@ jobs:
       - name: Configure Git user
         run: |
           git config --global user.name 'sw'
-          git config --global user.email 'vwx@github.com'
+          git config --global user.email '96579+vwx@users.noreply.github.com'
 
       - name: Run archive script
         run: |
