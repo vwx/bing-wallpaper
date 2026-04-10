@@ -83,7 +83,7 @@ jobs:
       - name: Commit and push updates
         if: steps.git-check.outputs.changes_detected == 'true'
         run: |
-          git add ${IMAGE_DIR}/ ${IMAGE_ARCHIVE_DIR}/
+          git add --sparse ${IMAGE_DIR}/ ${IMAGE_ARCHIVE_DIR}/
           minute=$(date +%M)
           rounded_minute=$((minute / 10 * 10))
           timestamp_iso=$(date +'%Y-%m-%dT%H:')$(printf '%02d' $rounded_minute)':00'
